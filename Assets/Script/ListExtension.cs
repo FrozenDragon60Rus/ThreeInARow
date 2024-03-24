@@ -15,5 +15,9 @@ namespace Assets.Script
             cell.Where(c => c.col == index).ToArray();
         public static List<Cell> GetNull(this List<Cell> cell) =>
             cell.Where(c => c.Child == null).ToList();
+        public static Cell[] GetNullArray(this List<Cell> cell) =>
+            cell.Where(c => c.Child == null).ToArray();
+        public static Cell Get(this List<Cell> cell, int row, int col) =>
+            cell.Where(c => c.row == row && c.col == col).FirstOrDefault();
     }
 }

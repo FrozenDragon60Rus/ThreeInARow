@@ -1,16 +1,13 @@
 ﻿using Assets.Script.Cells;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Script.Elements
 {
-    internal class ActiveElement : Element
+    public class ActiveElement : Element
     {
+        public ActiveElement() { }
+        public ActiveElement(ElementType type) => this.type = type;
         public override bool OnPosition
         {
             get

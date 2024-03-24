@@ -1,32 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Assets.Script
 {
     [Serializable]
-    internal class ElementList : MonoBehaviour
+    public class ElementList : MonoBehaviour
     {
-        public List<elementInfo> info = new List<elementInfo>();
+        public ElementInfo[] Default;
+        public GameObject[] Bonus;
+        public GameObject[] Barier;
         public int GetRandomIndex()
         {
-            float[] rate = new float[info.Count];
+            float[] rate = new float[Default.Length];
             for (int i = 0; i < rate.Length; i++)
-                rate[i] = UnityEngine.Random.value * info[i].Rate;
+                rate[i] = UnityEngine.Random.value * Default[i].Rate;
             return Array.IndexOf(rate, rate.Max());
         }
     }
 
     [Serializable]
-    class elementInfo
+    public class ElementInfo
     {
         [SerializeField]
-        public GameObject Prefab;
+        public GameObject prefab;
         [SerializeField]
         [Range(0, 1)]
-        public float Rate;
+        public float rate;
+        public GameObject Prefab { get { return prefab; } }
+        public float Rate{ get { return rate; } }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Assets.Script.Cells;
+using Unity.VisualScripting;
 
 
 // Merge multiple Sprites as one sprite
@@ -54,12 +55,12 @@ namespace Assets.Script
             return mergedSprite;
         }
 
-        public static Sprite Join(Sprite sprite, Sprite currentSprite, List<Cell> cell)
+        public static Sprite Join(Sprite sprite, Sprite currentSprite, int rowCount, int columnCount, List<Cell> cell)
         {
-            int width = 50,
-                height = 50;
+            int width = 200,
+                height = 200;
 
-            Texture2D mergedTexture = currentSprite.texture;
+            Texture2D mergedTexture = new Texture2D(width * rowCount, height * columnCount); ;
             Debug.Log(sprite.texture.width + " " + sprite.texture.height);
 
             for (int i = 0; i < mergedTexture.width; i++)
@@ -81,9 +82,8 @@ namespace Assets.Script
             }
             Debug.Log(currentSprite.texture.width + " " + currentSprite.texture.height);
             mergedTexture.Apply();
-            Sprite mergedSprite = Sprite.Create(mergedTexture, currentSprite.textureRect, currentSprite.pivot, currentSprite.pixelsPerUnit);
 
-            return mergedSprite;
+            return Sprite.Create(mergedTexture, currentSprite.rect, new Vector2(0, 0));
         }
     }
 }

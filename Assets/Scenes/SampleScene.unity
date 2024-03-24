@@ -441,7 +441,7 @@ GameObject:
   - component: {fileID: 1695674935}
   - component: {fileID: 1695674939}
   m_Layer: 0
-  m_Name: Square
+  m_Name: BackGround
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -530,7 +530,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
 --- !u!4 &1695674938
 Transform:
   m_ObjectHideFlags: 0
@@ -559,15 +559,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5582c875fa7e3640861157a78f1caf9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  info:
-  - Prefab: {fileID: 5402781188330961460, guid: 764f3a675051b034c85f7668a0b21e41, type: 3}
-    Rate: 1
-  - Prefab: {fileID: 4186690537792423017, guid: a5acea78d32a8bb42be2d9e0779c3f97, type: 3}
-    Rate: 1
-  - Prefab: {fileID: 9212644113639083372, guid: 4df778a9b3ed4da43ba8fccae5bb664f, type: 3}
-    Rate: 1
-  - Prefab: {fileID: 117799388094366394, guid: 926aebef86f970e4f9365b291eff04c7, type: 3}
-    Rate: 1
+  Default:
+  - prefab: {fileID: 4186690537792423017, guid: a5acea78d32a8bb42be2d9e0779c3f97, type: 3}
+    rate: 1
+  - prefab: {fileID: 9212644113639083372, guid: 4df778a9b3ed4da43ba8fccae5bb664f, type: 3}
+    rate: 1
+  - prefab: {fileID: 5402781188330961460, guid: 764f3a675051b034c85f7668a0b21e41, type: 3}
+    rate: 1
+  - prefab: {fileID: 117799388094366394, guid: 926aebef86f970e4f9365b291eff04c7, type: 3}
+    rate: 1
+  Bonus:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  Barier: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

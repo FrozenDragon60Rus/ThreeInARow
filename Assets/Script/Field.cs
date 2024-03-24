@@ -5,13 +5,15 @@ using UnityEngine;
 using Assets.Script.Cells;
 using System;
 using Assets.Script.SQLite;
+using Assets.Script.Elements;
+using System.Runtime.CompilerServices;
 
 namespace Assets.Script
 {
     public class Field : MonoBehaviour
     {
         //Element[,] cell;
-        List<Cell> cell;
+        public List<Cell> cell;
         [SerializeField]
         public int rowCount,
                    columnCount;
@@ -25,24 +27,28 @@ namespace Assets.Script
         Vector3 offset;
         bool userControl = false;
 
-
         // Start is called before the first frame update
         void Start()
         {
-            cell = new List<Cell>();
             LoadLevel(0);
-            DrawCell();
-            
-            //StartCoroutine(FillCell());
+            //DrawCell();
+
+            StartCoroutine(FillCell());
         }
         private void Update()
         {
-            if(userControl) SelectElement();
+            if (userControl) SelectElement();
         }
 
+        public void init()
+        {
+            LoadLevel(0);
+            FillCell();
+        }
         private void LoadLevel(int Number)
         {
             Table.Level level = new Table.Level();
+            cell = new List<Cell>();
 
             level.Number = Number;
             rowCount = level.Row;
@@ -50,15 +56,15 @@ namespace Assets.Script
 
             for (int row = 0; row < rowCount; row++)
                 for (int col = 0; col < columnCount; col++)
-                    cell.Add(new Cell(col, 
-                                      row, 
-                                      (CellStatus) Convert.ToByte(level.Cell[cell.Count])
+                    cell.Add(new Cell(col,
+                                      row,
+                                      (CellStatus)Convert.ToByte(level.Cell[cell.Count])
                                       ));
         }
         private void DrawCell()
         {
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
-            MergeSprite.Join(sprite, spriteRenderer.sprite, cell);
+            spriteRenderer.sprite = MergeSprite.Join(sprite, spriteRenderer.sprite, rowCount, columnCount, cell);
         }
         private void GenerateRow(Cell[] Row)
         {
@@ -68,16 +74,16 @@ namespace Assets.Script
             {
                 elementIndex = element.GetRandomIndex();
                 _cell.Child = Instantiate(
-                                CreateElement(element.info[elementIndex], _cell.col));
+                                CreateElement(element.Default[elementIndex], _cell.col));
             }
             Trigger.forbidden = true;
         }
 
-        private Element CreateElement(elementInfo info, int col)
+        private Element CreateElement(ElementInfo info, int col)
         {
             Element currentElement = info.Prefab
                                          .GetComponent<Element>();
-            currentElement.transform.position = new Vector3(col * Cell.size, Trigger.transform.position.y);
+            currentElement.transform.position = new Vector3(col * Cell.size, 5);//Trigger.transform.position.y);
             return currentElement;
         }
 
@@ -100,31 +106,35 @@ namespace Assets.Script
 
         private void FindMatches()
         {
-            List<Cell> delete = new Algoritm(rowCount, columnCount, score)
+            List<Cell> delete = new ConsecutiveElements(rowCount, columnCount, score)
                                     .FindFromStart(cell, new ElementType[] { ElementType.Red,
                                                                              ElementType.Green,
                                                                              ElementType.Blue,
                                                                              ElementType.Yellow});
-            delete = delete.Distinct().ToList();
 
             RemoveElement(delete);
+
+            if (delete.Count > 0) RelocateElement();
+            else userControl = true;
         }
 
         private bool FindMatchesFromElement(List<Cell> currentCell)
         {
             List<Cell> delete = new List<Cell>();
             foreach (Cell _cell in currentCell)
-            {
-                delete.AddRange(new Algoritm(rowCount, columnCount, score)
+                delete.AddRange(new ConsecutiveElements(rowCount, columnCount, score)
                                     .FindFromElement(cell.Where(c => c.Child.Type == _cell.Child.Type)
                                                          .ToList(),
-                                                     _cell));
-            }
-            delete = delete.Distinct().ToList();
+                                                     _cell,
+                                                     GetComponent<ElementList>().Bonus));
 
             RemoveElement(delete);
 
-            return delete.Count > 0;
+            bool isDelete = delete.Count > 0;
+            if (isDelete) RelocateElement();
+            else userControl = true;
+
+            return isDelete;
         }
         private void RemoveElement(List<Cell> delete)
         {
@@ -133,9 +143,6 @@ namespace Assets.Script
                 Destroy(cell.Child.gameObject);
                 cell.Child = null;
             }
-
-            if (delete.Count > 0) RelocateElement();
-            else userControl = true;
         }
         private void RelocateElement()
         {
@@ -198,13 +205,11 @@ namespace Assets.Script
                 if (NeighboringDirection.X + NeighboringDirection.Y != 0) {
                     int row = target.Parent.row + NeighboringDirection.X,
                         col = target.Parent.col + NeighboringDirection.Y;
-                    if (row >= 0 && row < rowCount && 
+                    if (row >= 0 && row < rowCount &&
                         col >= 0 && col < columnCount)
                     {
                         userControl = false;
-                        Cell neighbor = cell.Where(c => c.row == row && c.col == col)
-                                            .ToArray()
-                                            .First(),
+                        Cell neighbor = cell.Get(row, col),
                              currentCell = target.Parent;
 
                         SwapElements(neighbor, currentCell, false);
@@ -215,7 +220,7 @@ namespace Assets.Script
             }
             if (Input.GetMouseButtonUp(0))
             {
-                if(target)
+                if (target)
                     target = null;
             }
         }
@@ -234,17 +239,17 @@ namespace Assets.Script
         {
             Vector2 direction = new Vector2(end.x - start.x,
                                             end.y - start.y);
-            
+
             float distance = 0.25f;
-            if (Math.Abs(direction.x) < distance && Math.Abs(direction.y) < distance) 
+            if (Math.Abs(direction.x) < distance && Math.Abs(direction.y) < distance)
                 return new System.Drawing.Point(0, 0);
 
-            return Math.Abs(direction.x) < Math.Abs(direction.y) 
-                ? new System.Drawing.Point(direction.y < 0 ? -1 
-                                                           : 1, 
+            return Math.Abs(direction.x) < Math.Abs(direction.y)
+                ? new System.Drawing.Point(direction.y < 0 ? -1
+                                                           : 1,
                                            0)
-                : new System.Drawing.Point(0, 
-                                           direction.x < 0 ? -1 
+                : new System.Drawing.Point(0,
+                                           direction.x < 0 ? -1
                                                            : 1);
         }
     }

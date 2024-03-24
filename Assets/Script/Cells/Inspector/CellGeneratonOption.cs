@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 using UnityEngine.UI;
-using Assets.Script;
-using static UnityEditor.Progress;
-using UnityEngine.EventSystems;
 
 namespace Assets.Script.Cells.Inspector
 {

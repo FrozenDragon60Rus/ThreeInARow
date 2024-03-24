@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Drawing;
-using System.Threading.Tasks;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.UIElements;
-using System.Collections;
-using static UnityEngine.RuleTile.TilingRuleOutput;
+﻿using UnityEngine;
+using Assets.Script.Cells;
 
-namespace Assets.Script.Cells
+namespace Assets.Script.Elements
 {
     public enum ElementType
     {
