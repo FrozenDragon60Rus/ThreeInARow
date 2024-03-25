@@ -18,16 +18,6 @@ namespace Assets.Script.Elements
             }
         }
 
-        public override Cell Parent
-        {
-            set
-            {
-                parent = value;
-                StartCoroutine(Move());
-            }
-            get => parent;
-        }
-
         public IEnumerator Move()
         {
             float speed = 0.5f * Time.fixedDeltaTime;
@@ -41,9 +31,7 @@ namespace Assets.Script.Elements
             yield return true;
         }
 
-        protected override void Reaction()
-        {
-
-        }
+        protected override void Reaction() =>
+            StartCoroutine(Move());
     }
 }

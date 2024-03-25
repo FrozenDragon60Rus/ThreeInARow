@@ -19,7 +19,17 @@ namespace Assets.Script.Elements
         protected Cell parent;
 
         public abstract bool OnPosition { get; }
-        public abstract Cell Parent { set; get; }
+        //public abstract Cell Parent { set; get; }
+
+        public virtual Cell Parent
+        {
+            set
+            {
+                parent = value;
+                Reaction();
+            }
+            get => parent;
+        }
 
         public ElementType Type
         {
