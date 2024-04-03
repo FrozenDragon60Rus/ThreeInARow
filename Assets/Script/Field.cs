@@ -14,7 +14,6 @@ namespace Assets.Script
     {
         //Element[,] cell;
         public List<Cell> cell;
-        [SerializeField]
         public int rowCount,
                    columnCount;
         public int score = 0;
@@ -40,15 +39,10 @@ namespace Assets.Script
             if (userControl) SelectElement();
         }
 
-        public void init()
-        {
-            LoadLevel(0);
-            FillCell();
-        }
         private void LoadLevel(int Number)
         {
-            Table.Level level = new Table.Level();
-            cell = new List<Cell>();
+            Table.Level level = new();
+            cell = new();
 
             level.Number = Number;
             rowCount = level.Row;
@@ -66,11 +60,11 @@ namespace Assets.Script
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
             spriteRenderer.sprite = MergeSprite.Join(sprite, spriteRenderer.sprite, rowCount, columnCount, cell);
         }
-        private void GenerateRow(Cell[] Row)
+        private void GenerateRow(IEnumerable<Cell> Row)
         {
             var element = GetComponent<ElementList>();
             int elementIndex;
-            foreach (Cell _cell in Row)
+            foreach (var _cell in Row)
             {
                 elementIndex = element.GetRandomIndex();
                 _cell.Child = Instantiate(
@@ -118,10 +112,10 @@ namespace Assets.Script
             else userControl = true;
         }
 
-        private bool FindMatchesFromElement(List<Cell> currentCell)
+        private bool FindMatchesFromElement(IEnumerable<Cell> currentCell)
         {
-            List<Cell> delete = new List<Cell>();
-            foreach (Cell _cell in currentCell)
+            List<Cell> delete = new();
+            foreach (var _cell in currentCell)
                 delete.AddRange(new ConsecutiveElements(rowCount, columnCount, score)
                                     .FindFromElement(cell.Where(c => c.Child.Type == _cell.Child.Type)
                                                          .ToList(),
@@ -148,11 +142,10 @@ namespace Assets.Script
         {
             int colIndex = 0, rowIndex = 0;
             Cell[] column;
-            Element[] element;
             while (colIndex < columnCount)
             {
-                column = cell.GetColumn(colIndex);
-                element = column.Select(c => c.Child).Where(e => e != null).ToArray();
+                column = cell.GetColumn(colIndex).ToArray();
+                var element = column.Select(c => c.Child).Where(e => e != null);
 
                 foreach (Element _element in element)
                     column[rowIndex++].Child = _element;
@@ -167,8 +160,7 @@ namespace Assets.Script
         }
         private IEnumerator FillCell()
         {
-            List<Cell> Null = cell.GetNull();
-            Cell[] Row;
+            var Null = cell.GetNull();
             int[] rowIndex = Null.Select(c => c.row)
                                  .Distinct()
                                  .ToArray();
@@ -178,7 +170,7 @@ namespace Assets.Script
             {
                 if (Trigger.forbidden == false)
                 {
-                    Row = Null.GetRow(rowIndex[index++]);
+                    var Row = Null.GetRow(rowIndex[index++]);
                     GenerateRow(Row);
                 }
                 yield return Trigger.forbidden;
@@ -237,8 +229,8 @@ namespace Assets.Script
 
         private System.Drawing.Point GetNeighboringDirection(Vector2 start, Vector2 end)
         {
-            Vector2 direction = new Vector2(end.x - start.x,
-                                            end.y - start.y);
+            Vector2 direction = new (end.x - start.x,
+                                     end.y - start.y);
 
             float distance = 0.25f;
             if (Math.Abs(direction.x) < distance && Math.Abs(direction.y) < distance)

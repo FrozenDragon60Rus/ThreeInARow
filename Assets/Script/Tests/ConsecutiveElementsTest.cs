@@ -22,7 +22,7 @@ namespace Tests
          TestCase(-100, -1)]
         public void ConsecutiveElementsDirectionTest(int value, int direction)
         {
-            ConsecutiveElements search = new ConsecutiveElements(10, 10, 0);
+            var search = new ConsecutiveElements(10, 10, 0);
             Assert.AreEqual(search.GetDirection(value), direction);
         }
 
@@ -31,12 +31,12 @@ namespace Tests
         [UnityTest]
         public IEnumerator ConsecutiveElementsSearchFromStartTest()
         {
-            List<Cell> cell = new List<Cell>(),
-                       delete = new List<Cell>();
+            List<Cell> cell = new(),
+                       delete = new();
             Generate.Cell(cell);
             Generate.Element(cell);
 
-            ConsecutiveElements search = new ConsecutiveElements(10, 10, 0);
+            var search = new ConsecutiveElements(10, 10, 0);
             delete.AddRange(
                 search.FindFromStart(cell, new ElementType[] { ElementType.Red,
                                                                ElementType.Green,
