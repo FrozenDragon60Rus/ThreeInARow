@@ -2,14 +2,11 @@
 using Assets.Script.Elements;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
 using UnityEngine;
 
-[assembly: InternalsVisibleTo("Tests")]
 namespace Assets.Script
 {
     public class ConsecutiveElements
@@ -100,45 +97,29 @@ namespace Assets.Script
             }
         }
 
-        //
-        private int ElementsCount(IEnumerable<Cell> cell, int index, int direction, Func<Cell, int, bool> func, int count = 0)
-        {
-            direction = direction < 0 ? -1 : 1;
-            int next = index + direction;
-
-            if (next < 0 || index < 0) 
-                return count;
-            if (next == cell.Count() || index == cell.Count()) 
-                return count;
-            
-            var difference = new Cell(cell.ElementAt(next).col - cell.ElementAt(index).col,
-                                      cell.ElementAt(next).row - cell.ElementAt(index).row,
-									  cell.ElementAt(index).status);
-            //Debug.Log($"({difference.row},{difference.col}) -> {direction}");
-            return func(difference, direction) ? ElementsCount(cell, next, direction, func, count += 1)
-                                               : count;
-        }
-
         public List<Cell> FindFromElement(IEnumerable<Cell> cell, Cell currentCell, GameObject[] bonus)
         {
-            var Row = cell.GetRow(currentCell.row);
-            var Col = cell.GetColumn(currentCell.col);
+            var Row = cell.GetRow(currentCell.row)
+                          .Where(c => c.Child == currentCell.Child);
+            var Col = cell.GetColumn(currentCell.col)
+                          .Where(c => c.Child == currentCell.Child);
             List<Cell> destroy = new();
 
             Func<Cell, int, bool> colFunc = (c, pos) => c.col == pos,
                                   rowFunc = (c, pos) => c.row == pos;
 
             int row = Array.IndexOf(Row.ToArray(), currentCell),
-                col = Array.IndexOf(Col.ToArray(), currentCell);
-            int right = ElementsCount(Row, row, 1, colFunc),
+                col = Array.IndexOf(Col.ToArray(), currentCell),
+                right = ElementsCount(Row, row, 1, colFunc),
                 left = ElementsCount(Row, row, -1, colFunc),
                 top = ElementsCount(Col, col, 1, rowFunc),
-                bottom = ElementsCount(Col, col, -1, rowFunc);
+                bottom = ElementsCount(Col, col, -1, rowFunc),
+			    horizontal = right + left + 1,
+				vertical = top + bottom + 1;
 
-            //Debug.Log($"left:{left}, right:{right}, top:{top}, bottom: {bottom}");
-            int horizontal = right + left + 1,
-                vertical = top + bottom + 1;
-            if (horizontal > 2)
+			Debug.Log($"left:{left}, right:{right}, top:{top}, bottom: {bottom}");
+
+			if (horizontal > 2)
             {
                 destroy.AddRange(
                     Row.ToList().GetRange(row - left, horizontal));
@@ -163,6 +144,25 @@ namespace Assets.Script
             return destroy;
         }
 
-        internal int GetDirection(int direction) => direction < 0 ? -1 : 1;
+		//
+		private int ElementsCount(IEnumerable<Cell> cell, int index, int direction, Func<Cell, int, bool> func, int count = 0)
+		{
+			direction = GetDirection(direction);
+			int next = index + direction;
+
+			if (next < 0 || index < 0)
+				return count;
+			if (next == cell.Count() || index == cell.Count())
+				return count;
+
+			var difference = new Cell(cell.ElementAt(next).col - cell.ElementAt(index).col,
+									  cell.ElementAt(next).row - cell.ElementAt(index).row,
+									  cell.ElementAt(index).status);
+			//Debug.Log($"({difference.row},{difference.col}) -> {direction}");
+			return func(difference, direction) ? ElementsCount(cell, next, direction, func, count += 1)
+											   : count;
+		}
+
+		private int GetDirection(int direction) => direction < 0 ? -1 : 1;
     }
 }

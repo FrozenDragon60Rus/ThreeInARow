@@ -4,9 +4,7 @@ using System.Linq;
 using UnityEngine;
 using Assets.Script.Cells;
 using System;
-using Assets.Script.SQLite;
 using Assets.Script.Elements;
-using System.Runtime.CompilerServices;
 
 namespace Assets.Script
 {

@@ -1,11 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using System.Data.SQLite;
 using System;
-using Newtonsoft.Json.Linq;
-using System.Xml.Linq;
-using Unity.VisualScripting;
 
 namespace Assets.Script.SQLite
 {

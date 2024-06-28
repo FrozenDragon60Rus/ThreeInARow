@@ -1,5 +1,4 @@
-﻿using Assets.Script.Cells;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace Assets.Script.Elements

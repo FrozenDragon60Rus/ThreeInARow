@@ -1,9 +1,6 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using Assets.Script.Cells;
-using Unity.VisualScripting;
 
 
 // Merge multiple Sprites as one sprite
