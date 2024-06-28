@@ -11,21 +11,32 @@ namespace Tests.Generator
     {
         public static void Cell(List<Cell> cell)
         {
-            Level level = new Level();
+			var level = new Level
+			{
+				Number = 0
+			};
 
-            level.Number = 0;
-
-            for (int row = 0; row < level.Row; row++)
+			for (int row = 0; row < level.Row; row++)
                 for (int col = 0; col < level.Column; col++)
                     cell.Add(new Cell(col,
                                       row,
                                       (CellStatus)Convert.ToByte(level.Cell[cell.Count])
                                       ));
         }
-        public static void Element(List<Cell> cell)
+		public static void Cell(List<Cell> cell, int rows, int columns)
+		{
+			for (int row = 0; row < rows; row++)
+				for (int col = 0; col < columns; col++)
+					cell.Add(new Cell(col,
+									  row,
+									  CellStatus.Default
+									  ));
+		}
+		public static void Element(List<Cell> cell)
         {
             int elementIndex = 0;
-            ActiveElement[] element = new ActiveElement[]{
+            ActiveElement[] element = new[]
+            {
                 MonoBehaviour.Instantiate(TestElement.Blue.prefab.GetComponent<ActiveElement>()),
                 MonoBehaviour.Instantiate(TestElement.Green.prefab.GetComponent<ActiveElement>()),
                 MonoBehaviour.Instantiate(TestElement.Red.prefab.GetComponent<ActiveElement>()),
@@ -37,5 +48,26 @@ namespace Tests.Generator
                 _cell.Child = element[elementIndex];
             }
         }
+        public static void StaticElement(List<Cell> cell)
+        {
+			ActiveElement[] element = new[]
+			{
+				MonoBehaviour.Instantiate(TestElement.Blue.prefab.GetComponent<ActiveElement>()),
+				MonoBehaviour.Instantiate(TestElement.Green.prefab.GetComponent<ActiveElement>()),
+				MonoBehaviour.Instantiate(TestElement.Red.prefab.GetComponent<ActiveElement>()),
+				MonoBehaviour.Instantiate(TestElement.Yellow.prefab.GetComponent<ActiveElement>())
+			};
+
+            cell[0].Child = element[0];
+			cell[1].Child = element[2];
+			cell[2].Child = element[1];
+			cell[3].Child = element[1];
+			cell[4].Child = element[1];
+			cell[5].Child = element[3];
+			cell[6].Child = element[0];
+			cell[7].Child = element[2];
+			cell[8].Child = element[3];
+			cell[9].Child = element[3];
+		}
     }
 }
