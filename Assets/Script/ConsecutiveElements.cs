@@ -3,6 +3,7 @@ using Assets.Script.Elements;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -11,11 +12,27 @@ namespace Assets.Script
 {
     public class ConsecutiveElements
     {
-        int RowCount { get; }
+		enum Range : Byte
+		{
+			Empty = 0,
+			Row = 1,
+			Column = 2
+		}
+
+        Range range = Range.Empty;
+
+		int RowCount { get; }
         int ColCount { get; }
         int score;
 
-        public ConsecutiveElements(int rowCount, int colCount, int score)
+		private readonly Func<Cell, int, bool> checkCol = (c, pos) => c.col == pos,
+											   checkRow = (c, pos) => c.row == pos;
+		private Func<Cell, int, bool> GetRange =>
+			range == Range.Row ? checkRow : checkCol;
+
+		private Range SwitchRange => range == Range.Row ? Range.Column : Range.Row;
+
+		public ConsecutiveElements(int rowCount, int colCount, int score)
         {
             RowCount = rowCount;
             ColCount = colCount;
@@ -24,6 +41,7 @@ namespace Assets.Script
 
         public List<Cell> FindFromStart(IEnumerable<Cell> cell, ElementType[] types)
         {
+            range = Range.Empty;
             List<Cell> destroy = new();
 
             foreach (var type in types)
@@ -31,138 +49,115 @@ namespace Assets.Script
                 var query = cell.Where(c => c.Child.Type == type).ToList();
 
                 //Search repetitive element in row
-                GetFromLine(query, destroy, RowCount, true);
-                //Search repetitive element in column
-                GetFromLine(query, destroy, ColCount, false);
+                GetFromLine(query, destroy, RowCount);
+				//Search repetitive element in column
+				GetFromLine(query, destroy, ColCount);
             }
             return destroy.Distinct().ToList();
         }
 
-        private void GetFromLine(IEnumerable<Cell> cell, List<Cell> destroy, int count, bool isRow)
+        private void GetFromLine(IEnumerable<Cell> cell, List<Cell> destroy, int count)
         {
-            int pos = 0,
+			int pos = 0,
                 index,
                 elementCount;
 
-            Func<Cell, int, bool> colFunc = (c, pos) => c.col == pos,
-                                  rowFunc = (c, pos) => c.row == pos;
-
             while (pos < count)
             {
-                var line = cell.Where(c => isRow ? rowFunc(c, pos) 
-                                                 : colFunc(c, pos))
+				range = SwitchRange;
+				var line = cell.Where(c => GetRange(c, pos))
                                .Where(c => !destroy.Contains(c))
                                .ToList();
 
                 index = 0;
+                Range 
+                    currenRange = range,
+                    crossrange;
                 while (index < line.Count)
                 {
-                    elementCount = ElementsCount(line, index, 1, isRow ? colFunc : rowFunc, 1);
+					range = SwitchRange;
+					elementCount = ElementsCount(line, index, 1, 1);
 
                     if (elementCount > 2)
                     {
-                        if (isRow)
-                            for (int i = index; i < index + elementCount; i++)
-                                GetFromCross(cell, line, destroy, i);
+                        crossrange = range;
+                        for (int i = index; i < index + elementCount; i++)
+                        {
+                            GetFromCross(cell, line, destroy, i);
+                            range = crossrange;
+                        }
 
-                        destroy.AddRange(
+						destroy.AddRange(
                             line.GetRange(index, elementCount));
                         score += elementCount;
                     }
+					range = currenRange;
 
-                    index += elementCount;
-                }
+					index += elementCount;
+				}
                 pos++;
             }
         }
-        private void GetFromCross(IEnumerable<Cell> cell, IEnumerable<Cell> row, List<Cell> destroy, int rowIndex)
+        private void GetFromCross(IEnumerable<Cell> cell, IEnumerable<Cell> line, List<Cell> destroy, int _index)
         {
             int index, 
                 count;
-            var Col = cell.Where(c => c.col == rowIndex)
-                          .Where(c => !destroy.Contains(c))
-                          .ToList();
-            index = Col.IndexOf(row.ElementAt(rowIndex));
 
-            int top = ElementsCount(Col, index, 1, (c, pos) => c.row == pos),
-                bottom = ElementsCount(Col, index, -1, (c, pos) => c.row == pos);
+            var crossLine = cell.Where(c => GetRange(c, _index))
+                                .Where(c => !destroy.Contains(c))
+                                .ToList();
 
-            count = top + bottom;
+			index = crossLine.IndexOf(line.ElementAt(_index));
+
+			range = SwitchRange;
+			int top = ElementsCount(crossLine, index, 1),
+                bottom = ElementsCount(crossLine, index, -1); Debug.Log($"top: {top}, bottom: {bottom}, cross: {crossLine.Count} ");
+
+			count = top + bottom;
 
             if (count > 1)
             {
                 destroy.AddRange(
-                    Col.GetRange(index - bottom, top));
+					crossLine.GetRange(index - bottom, top));
                 score += count;
             }
         }
 
-        public List<Cell> FindFromElement(IEnumerable<Cell> cell, Cell currentCell, GameObject[] bonus)
+		public List<Cell> FindFromElement(IEnumerable<Cell> cell, Cell currentCell, GameObject[] bonus)
         {
-            var Row = cell.GetRow(currentCell.row)
-                          .Where(c => c.Child == currentCell.Child);
-            var Col = cell.GetColumn(currentCell.col)
-                          .Where(c => c.Child == currentCell.Child);
-            List<Cell> destroy = new();
+			range = Range.Column;
 
-            Func<Cell, int, bool> colFunc = (c, pos) => c.col == pos,
-                                  rowFunc = (c, pos) => c.row == pos;
+			List<Cell> destroy = new();
 
-            int row = Array.IndexOf(Row.ToArray(), currentCell),
-                col = Array.IndexOf(Col.ToArray(), currentCell),
-                right = ElementsCount(Row, row, 1, colFunc),
-                left = ElementsCount(Row, row, -1, colFunc),
-                top = ElementsCount(Col, col, 1, rowFunc),
-                bottom = ElementsCount(Col, col, -1, rowFunc),
-			    horizontal = right + left + 1,
-				vertical = top + bottom + 1;
+            var query = cell.Where(c => c.Child.Type == currentCell.Child.Type);
+            var rowList = query.GetRow(currentCell.row);
+			var colList = query.GetColumn(currentCell.col);
+                
+			GetFromCross(query, rowList, destroy, currentCell.col);
+			GetFromCross(query, colList, destroy, currentCell.row);
 
-			Debug.Log($"left:{left}, right:{right}, top:{top}, bottom: {bottom}");
-
-			if (horizontal > 2)
-            {
-                destroy.AddRange(
-                    Row.ToList().GetRange(row - left, horizontal));
-                if (vertical > 2)
-                {
-                    destroy.AddRange(Col.ToList()
-                                        .GetRange(col - bottom, vertical));
-                    //bonus = Bonus.Bomb;
-                    return destroy.Distinct().ToList();
-                }
-                //bonus = AddBonus(horizontal);
-                return destroy;
-            }
-            if (vertical > 2)
-            {
-                destroy.AddRange(
-                    Col.ToList().GetRange(col - bottom, vertical));
-                //AddBonus(vertical, destroy);
-            }
-
-            //bonus = new Dictionary<Bonus, Cell>();*/
-            return destroy;
-        }
+			return destroy.Distinct().ToList();
+		}
 
 		//
-		private int ElementsCount(IEnumerable<Cell> cell, int index, int direction, Func<Cell, int, bool> func, int count = 0)
+		private int ElementsCount(IEnumerable<Cell> line, int index, int direction, int count = 0)
 		{
 			direction = GetDirection(direction);
 			int next = index + direction;
 
 			if (next < 0 || index < 0)
 				return count;
-			if (next == cell.Count() || index == cell.Count())
+			if (next == line.Count() || index == line.Count())
 				return count;
 
-			var difference = new Cell(cell.ElementAt(next).col - cell.ElementAt(index).col,
-									  cell.ElementAt(next).row - cell.ElementAt(index).row,
-									  cell.ElementAt(index).status);
+			var difference = new Cell(line.ElementAt(next).col - line.ElementAt(index).col,
+									  line.ElementAt(next).row - line.ElementAt(index).row,
+									  line.ElementAt(index).status);
 			//Debug.Log($"({difference.row},{difference.col}) -> {direction}");
-			return func(difference, direction) ? ElementsCount(cell, next, direction, func, count += 1)
-											   : count;
+			return GetRange(difference, direction) ? ElementsCount(line, next, direction, count += 1)
+											       : count;
 		}
 
 		private int GetDirection(int direction) => direction < 0 ? -1 : 1;
-    }
+	}
 }
