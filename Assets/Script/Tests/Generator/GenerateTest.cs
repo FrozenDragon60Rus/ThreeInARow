@@ -10,16 +10,16 @@ namespace Tests.Generator
         [Test]
         public void CellTest()
         {
-            List<Cell> cell = new List<Cell>();
-            Generate.Cell(cell);
+            List<Cell> cell = new();
+            cell.Generate();
             Assert.AreEqual(100, cell.Count);
         }
         [Test]
         public void ElementTest()
         {
-            List<Cell> cell = new List<Cell>();
-            Generate.Cell(cell);
-            Generate.Element(cell);
+            List<Cell> cell = new();
+            cell.Generate();
+            cell.Element();
             Assert.AreEqual(100, cell.Select(c => c.Child != null).Count());
         }
     }
