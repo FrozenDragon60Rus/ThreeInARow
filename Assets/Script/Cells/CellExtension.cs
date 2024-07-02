@@ -1,4 +1,5 @@
 ﻿using Assets.Script.Cells;
+using Assets.Script.Elements;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,5 +17,7 @@ namespace Assets.Script
             cell.Where(c => c.Child == null);
         public static Cell Get(this IEnumerable<Cell> cell, int row, int col) =>
             cell.Where(c => c.row == row && c.col == col).FirstOrDefault();
-    }
+        public static IEnumerable<Cell> Get(this IEnumerable<Cell> cell, ElementType type) =>
+            cell.Where(c => c.Child.Type == type);
+	}
 }

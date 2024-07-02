@@ -8,22 +8,23 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace Assets.Script
 {
-    public class ConsecutiveElements
-    {
-		enum Range : Byte
+	public class ConsecutiveElements
+	{
+		internal enum Range : Byte
 		{
 			Empty = 0,
 			Row = 1,
 			Column = 2
 		}
 
-        Range range = Range.Empty;
+		internal Range range = Range.Empty;
 
 		int RowCount { get; }
-        int ColCount { get; }
-        int score;
+		int ColCount { get; }
+		int score;
 
 		private readonly Func<Cell, int, bool> checkCol = (c, pos) => c.col == pos,
 											   checkRow = (c, pos) => c.row == pos;
@@ -33,106 +34,106 @@ namespace Assets.Script
 		private Range SwitchRange => range == Range.Row ? Range.Column : Range.Row;
 
 		public ConsecutiveElements(int rowCount, int colCount, int score)
-        {
-            RowCount = rowCount;
-            ColCount = colCount;
-            this.score = score;
-        }
+		{
+			RowCount = rowCount;
+			ColCount = colCount;
+			this.score = score;
+		}
 
-        public List<Cell> FindFromStart(IEnumerable<Cell> cell, ElementType[] types)
-        {
-            range = Range.Empty;
-            List<Cell> destroy = new();
+		public List<Cell> FindFromStart(IEnumerable<Cell> cell, ElementType[] types)
+		{
+			range = Range.Empty;
+			List<Cell> destroy = new();
 
-            foreach (var type in types)
-            {
-                var query = cell.Where(c => c.Child.Type == type).ToList();
+			foreach (var type in types)
+			{
+				var query = cell.Get(type);
 
-                //Search repetitive element in row
-                GetFromLine(query, destroy, RowCount);
+				//Search repetitive element in row
+				GetFromLine(query, destroy, RowCount);
 				//Search repetitive element in column
 				GetFromLine(query, destroy, ColCount);
-            }
-            return destroy.Distinct().ToList();
-        }
+			}
+			return destroy.Distinct().ToList();
+		}
 
-        private void GetFromLine(IEnumerable<Cell> cell, List<Cell> destroy, int count)
-        {
+		private void GetFromLine(IEnumerable<Cell> cell, List<Cell> destroy, int count)
+		{
 			int pos = 0,
-                index,
-                elementCount;
+				index,
+				elementCount;
 
-            while (pos < count)
-            {
+			while (pos < count)
+			{
 				range = SwitchRange;
 				var line = cell.Where(c => GetRange(c, pos))
-                               .Where(c => !destroy.Contains(c))
-                               .ToList();
+							   .Where(c => !destroy.Contains(c))
+							   .ToList();
 
-                index = 0;
-                Range 
-                    currenRange = range,
-                    crossrange;
-                while (index < line.Count)
-                {
+				index = 0;
+				Range
+					currenRange = range,
+					crossrange;
+				while (index < line.Count)
+				{
 					range = SwitchRange;
 					elementCount = ElementsCount(line, index, 1, 1);
 
-                    if (elementCount > 2)
-                    {
-                        crossrange = range;
-                        for (int i = index; i < index + elementCount; i++)
-                        {
-                            GetFromCross(cell, line, destroy, i);
-                            range = crossrange;
-                        }
+					if (elementCount > 2)
+					{
+						crossrange = range;
+						for (int i = index; i < index + elementCount; i++)
+						{
+							GetFromCross(cell, line, destroy, i);
+							range = crossrange;
+						}
 
 						destroy.AddRange(
-                            line.GetRange(index, elementCount));
-                        score += elementCount;
-                    }
+							line.GetRange(index, elementCount));
+						score += elementCount;
+					}
 					range = currenRange;
 
 					index += elementCount;
 				}
-                pos++;
-            }
-        }
-        private void GetFromCross(IEnumerable<Cell> cell, IEnumerable<Cell> line, List<Cell> destroy, int _index)
-        {
-            int index, 
-                count;
+				pos++;
+			}
+		}
+		private void GetFromCross(IEnumerable<Cell> cell, IEnumerable<Cell> line, List<Cell> destroy, int _index)
+		{
+			int index,
+				count;
 
-            var crossLine = cell.Where(c => GetRange(c, _index))
-                                .Where(c => !destroy.Contains(c))
-                                .ToList();
+			var crossLine = cell.Where(c => GetRange(c, _index))
+								.Where(c => !destroy.Contains(c))
+								.ToList();
 
 			index = crossLine.IndexOf(line.ElementAt(_index));
 
 			range = SwitchRange;
 			int top = ElementsCount(crossLine, index, 1),
-                bottom = ElementsCount(crossLine, index, -1); Debug.Log($"top: {top}, bottom: {bottom}, cross: {crossLine.Count} ");
+				bottom = ElementsCount(crossLine, index, -1);
 
 			count = top + bottom;
 
-            if (count > 1)
-            {
-                destroy.AddRange(
+			if (count > 1)
+			{
+				destroy.AddRange(
 					crossLine.GetRange(index - bottom, top));
-                score += count;
-            }
-        }
+				score += count;
+			}
+		}
 
 		public List<Cell> FindFromElement(IEnumerable<Cell> cell, Cell currentCell, GameObject[] bonus)
-        {
+		{
 			range = Range.Column;
 
 			List<Cell> destroy = new();
 
-            var query = cell.Where(c => c.Child.Type == currentCell.Child.Type);
-            var rowList = query.GetRow(currentCell.row);
+			var query = cell.Get(currentCell.Child.Type);
+			var rowList = query.GetRow(currentCell.row);
 			var colList = query.GetColumn(currentCell.col);
-                
+
 			GetFromCross(query, rowList, destroy, currentCell.col);
 			GetFromCross(query, colList, destroy, currentCell.row);
 
@@ -155,7 +156,7 @@ namespace Assets.Script
 									  line.ElementAt(index).status);
 			//Debug.Log($"({difference.row},{difference.col}) -> {direction}");
 			return GetRange(difference, direction) ? ElementsCount(line, next, direction, count += 1)
-											       : count;
+												   : count;
 		}
 
 		private int GetDirection(int direction) => direction < 0 ? -1 : 1;
