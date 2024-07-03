@@ -5,6 +5,7 @@ using UnityEngine;
 using Assets.Script.Cells;
 using System;
 using Assets.Script.Elements;
+using Assets.Script.Cells.Inspector;
 
 namespace Assets.Script
 {
@@ -98,11 +99,13 @@ namespace Assets.Script
 
         private void FindMatches()
         {
-            List<Cell> delete = new ConsecutiveElements(rowCount, columnCount, score)
-                                    .FindFromStart(cell, new ElementType[] { ElementType.Red,
-                                                                             ElementType.Green,
-                                                                             ElementType.Blue,
-                                                                             ElementType.Yellow});
+            List<Cell> delete = cell.FindConsecutiveFromStart(
+                                    new ElementType[] { 
+                                        ElementType.Red,
+                                        ElementType.Green,
+                                        ElementType.Blue,
+                                        ElementType.Yellow},
+                                    ref score);
 
             RemoveElement(delete);
 
@@ -114,11 +117,11 @@ namespace Assets.Script
         {
             List<Cell> delete = new();
             foreach (var _cell in currentCell)
-                delete.AddRange(new ConsecutiveElements(rowCount, columnCount, score)
-                                    .FindFromElement(cell.Where(c => c.Child.Type == _cell.Child.Type)
-                                                         .ToList(),
-                                                     _cell,
-                                                     GetComponent<ElementList>().Bonus));
+                delete.AddRange(
+                    cell.FindConsecutiveFromElement(
+                        _cell, 
+                        GetComponent<ElementList>().Bonus, 
+                        ref score));
 
             RemoveElement(delete);
 

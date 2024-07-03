@@ -19,7 +19,7 @@ namespace Tests.Generator
         {
             List<Cell> cell = new();
             cell.Generate();
-            cell.Element();
+            cell.GenerateElement();
             Assert.AreEqual(100, cell.Select(c => c.Child != null).Count());
         }
     }

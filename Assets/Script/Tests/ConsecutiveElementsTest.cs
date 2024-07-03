@@ -10,6 +10,8 @@ using Assets.Script.Elements;
 using System.Reflection;
 using UnityEngine.Windows;
 using System;
+using NUnit.Framework.Constraints;
+using System.Linq;
 
 
 namespace Tests
@@ -24,7 +26,7 @@ namespace Tests
             List<Cell> cell = new(),
                        delete = new();
             cell.Generate();
-            cell.Element();
+            cell.GenerateElement();
 
             var search = new ConsecutiveElements(10, 10, 0);
             delete.AddRange(
@@ -44,23 +46,26 @@ namespace Tests
 		{
 			List<Cell> cell = new(),
 					   delete = new();
-			cell.Generate(3, 10);
+
 			cell.StaticElement30();
 
-			var search = new ConsecutiveElements(3, 10, 0);
+			int score = 0;
 			delete.AddRange(
-				search.FindFromStart(cell, new ElementType[] { ElementType.Red,
-															   ElementType.Green,
-															   ElementType.Blue,
-															   ElementType.Yellow
-															 }
-									)
-						   );
+				cell.FindConsecutiveFromStart(
+					new ElementType[] { 
+						ElementType.Red,
+						ElementType.Green,
+						ElementType.Blue,
+						ElementType.Yellow
+					},
+					ref score
+				)
+			);
 
 			foreach (var element in delete)
 				Debug.Log(element.row * 10 + element.col);
 
-			Assert.AreEqual(16, delete.Count);
+			Assert.AreEqual(19, delete.Count);
 			yield return null;
 		}
 		[UnityTest]
@@ -68,12 +73,11 @@ namespace Tests
 		{
 			List<Cell> cell = new(),
 					   delete = new();
-			cell.Generate(1, 10);
 			cell.StaticElement10();
 
-			var search = new ConsecutiveElements(1, 10, 0);
+			int score = 0;
 			delete.AddRange(
-				search.FindFromElement(cell, cell[2], null));
+				cell.FindConsecutiveFromElement(cell[2], null, ref score));
 
 			Assert.NotZero(delete.Count);
 			yield return null;
@@ -83,42 +87,80 @@ namespace Tests
 		{
 			List<Cell> cell = new(),
 					   delete = new();
-			cell.Generate(1, 10);
 			cell.StaticElement10();
 
-			Debug.Log("start "+delete.Count);
-			var search = new ConsecutiveElements(1, 10, 0);
+			Debug.Log("start " + delete.Count);
+			int score = 0;
 			delete.AddRange(
-				search.FindFromElement(cell, cell[1], null));
+				cell.FindConsecutiveFromElement(cell[1], null, ref score));
 			Debug.Log("end " + delete.Count);
 
 			Assert.Zero(delete.Count);
 			yield return null;
 		}
-		[UnityTest]
-		public IEnumerator GetFromCrossTest()
+		[TestCase(2, 3),
+			TestCase(12, 3),
+			TestCase(22, 3)]
+		public void GetFromCrossColumnTest(int index, int expectedCount)
 		{
 			List<Cell> cell = new(),
 					   delete = new();
-			cell.Generate(3, 10);
 			cell.StaticElement30();
 
-			var consecutive = new ConsecutiveElements(3, 10, 0);
-			var type = consecutive.GetType();
-			var flag = BindingFlags.Instance | BindingFlags.NonPublic;
-			var getDirection = type.GetMethod("GetFromCross", flag);
+			var type = typeof(CellConsecutiveExtension); ;
+			var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
+			var getFromCross = type.GetMethod("GetFromCross", flag);
+			var query = cell.Get(cell[index].Child.Type);
+			var line = query.GetRow(cell[index].row).ToList();
+			var _index = line.IndexOf(cell[index]);
+
+			CellConsecutiveExtension.range = CellConsecutiveExtension.Range.Column;
+
+			int score = 0;
 			var parameters = new object[] 
-			{ 
-				cell, 
-				new Cell[]{ cell[0], cell[1], cell[2] },
+			{
+				query, 
+				line,
 				delete,
-				1
+				_index,
+				score
 			};
 
-			int direction = (int)getDirection?.Invoke(consecutive, parameters);
+			getFromCross?.Invoke(null, parameters);
 
-			Assert.AreEqual(delete, delete);
-			yield return null;
+			Assert.AreEqual(expectedCount, delete.Count);
+		}
+		[TestCase(23, 3),
+			TestCase(24, 3),
+			TestCase(25, 3)]
+		public void GetFromCrossRowTest(int index, int expectedCount)
+		{
+			List<Cell> cell = new(),
+					   delete = new();
+			cell.StaticElement30();
+
+			var type = typeof(CellConsecutiveExtension); ;
+			var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
+			var getFromCross = type.GetMethod("GetFromCross", flag);
+			var query = cell.Get(cell[index].Child.Type);
+			var line = query.GetColumn(cell[index].col).ToList();
+			var _index = line.IndexOf(cell[index]);
+
+			CellConsecutiveExtension.range = CellConsecutiveExtension.Range.Row;
+
+			int score = 0;
+			var parameters = new object[]
+			{
+				query,
+				line,
+				delete,
+				_index,
+				score
+			};
+
+			getFromCross?.Invoke(null, parameters);
+
+			Assert.AreEqual(expectedCount, delete.Count);
 		}
 
 		[TestCase(100, 1),
@@ -128,45 +170,39 @@ namespace Tests
 		 TestCase(-100, -1)]
 		public void GetDirectionTest(int input, int output)
         {
-            var consecutive = new ConsecutiveElements(10, 10, 0);
-            var type = consecutive.GetType();
-            var flag = BindingFlags.Instance | BindingFlags.NonPublic;
+			var type = typeof(CellConsecutiveExtension);
+			var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
             var getDirection = type.GetMethod("GetDirection", flag);
             var parameters = new object[] { input };
 
-            int direction = (int)getDirection?.Invoke(consecutive, parameters);
+            int direction = (int)getDirection?.Invoke(null, parameters);
 
             Assert.AreEqual(output, direction);
 		}
-        [TestCase(0, 1, 1)]
-        public void ElementsCountTest(int index, int direction, int expecnedCount)
+        [TestCase(0, 1, 1),
+		 TestCase(2, 1, 3),
+		 TestCase(4, -1, 3)]
+        public void ElementsInSequenceTest(int index, int direction, int expecnedCount)
         {
             List<Cell> cell = new();
 
-			cell.Generate();
-			cell.Element();
+			cell.StaticElement10();
+			var query = cell.Get(cell[index].Child.Type).ToList();
 
-			Func<Cell, int, bool> row = (c, pos) => c.row == pos;
+			var type = typeof(CellConsecutiveExtension);
+			var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
 
-			var consecutive = new ConsecutiveElements(10, 10, 0);
-			var type = consecutive.GetType();
-			var flag = BindingFlags.Instance | BindingFlags.NonPublic;
-
-			var rangeEnum = type.GetEnumNames();
-
-			var rangeFlag = type.GetField("range", flag);
-			rangeFlag.SetValue(consecutive, 1);
-
-			var elementsCount = type.GetMethod("GetDirection", flag);
+			var sequence = type.GetMethod("ElementsInSequence", flag);
+			int queryIndex = query.IndexOf(cell[index]);
 			var parameters = new object[] 
             {
-				cell,
-                index,
+				query,
+				queryIndex,
 				direction,
-				row
+				1
 			};
 
-            int count = (int)elementsCount?.Invoke(consecutive, parameters);
+            int count = (int)sequence?.Invoke(null, parameters);
 
 			Assert.AreEqual(expecnedCount, count);
 		}

@@ -2,8 +2,6 @@
 using Assets.Script.Elements;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -77,7 +75,7 @@ namespace Assets.Script
 				while (index < line.Count)
 				{
 					range = SwitchRange;
-					elementCount = ElementsCount(line, index, 1, 1);
+					elementCount = ElementsInSequence(line, index, 1, 1);
 
 					if (elementCount > 2)
 					{
@@ -111,8 +109,8 @@ namespace Assets.Script
 			index = crossLine.IndexOf(line.ElementAt(_index));
 
 			range = SwitchRange;
-			int top = ElementsCount(crossLine, index, 1),
-				bottom = ElementsCount(crossLine, index, -1);
+			int top = ElementsInSequence(crossLine, index, 1),
+				bottom = ElementsInSequence(crossLine, index, -1);
 
 			count = top + bottom;
 
@@ -141,7 +139,7 @@ namespace Assets.Script
 		}
 
 		//
-		private int ElementsCount(IEnumerable<Cell> line, int index, int direction, int count = 0)
+		private int ElementsInSequence(IEnumerable<Cell> line, int index, int direction, int count = 0)
 		{
 			direction = GetDirection(direction);
 			int next = index + direction;
@@ -151,12 +149,11 @@ namespace Assets.Script
 			if (next == line.Count() || index == line.Count())
 				return count;
 
-			var difference = new Cell(line.ElementAt(next).col - line.ElementAt(index).col,
-									  line.ElementAt(next).row - line.ElementAt(index).row,
-									  line.ElementAt(index).status);
+			int dif = line.ElementAt(next).col - line.ElementAt(index).col +
+					  line.ElementAt(next).row - line.ElementAt(index).row;
 			//Debug.Log($"({difference.row},{difference.col}) -> {direction}");
-			return GetRange(difference, direction) ? ElementsCount(line, next, direction, count += 1)
-												   : count;
+			return dif == 1 ? ElementsInSequence(line, next, direction, count += 1)
+							: count;
 		}
 
 		private int GetDirection(int direction) => direction < 0 ? -1 : 1;

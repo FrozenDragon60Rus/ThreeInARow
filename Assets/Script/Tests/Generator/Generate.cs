@@ -32,7 +32,7 @@ namespace Tests.Generator
 									  CellStatus.Default
 									  ));
 		}
-		public static void Element(this List<Cell> cell)
+		public static void GenerateElement(this List<Cell> cell)
         {
             int elementIndex = 0;
             ActiveElement[] element = new[]
@@ -50,6 +50,7 @@ namespace Tests.Generator
         }
         public static void StaticElement10(this List<Cell> cell)
         {
+			cell.Generate(1, 10);
 			ActiveElement[] element = new[]
 			{
 				MonoBehaviour.Instantiate(TestElement.Blue.prefab.GetComponent<ActiveElement>()),
@@ -71,7 +72,7 @@ namespace Tests.Generator
 		}
 		public static void StaticElement30(this List<Cell> cell)
 		{
-			if (cell.Count < 30) return;
+			cell.Generate(3, 10);
 
 			ActiveElement[] element = new[]
 			{
