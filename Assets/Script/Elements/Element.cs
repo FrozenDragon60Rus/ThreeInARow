@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Assets.Script.Cells;
+using System;
 
 namespace Assets.Script.Elements
 {
@@ -31,11 +32,9 @@ namespace Assets.Script.Elements
             get => parent;
         }
 
-        public ElementType Type
-        {
-            get => type;
-        }
+        public ElementType Type => type;
 
         protected abstract void Reaction();
+        public abstract void Remove();
     }
 }

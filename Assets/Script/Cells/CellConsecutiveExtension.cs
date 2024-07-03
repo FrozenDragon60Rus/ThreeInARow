@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -21,6 +20,8 @@ namespace Assets.Script.Cells
 		internal static Range range = Range.Empty;
 		private static IEnumerable<Cell> GetLine(this IEnumerable<Cell> cell, int pos) =>
 			range == Range.Row ? cell.GetRow(pos) : cell.GetColumn(pos);
+		private static IEnumerable<Cell> GetLine(this IEnumerable<Cell> cell, Cell current) =>
+			range == Range.Row ? cell.GetRow(current.row) : cell.GetColumn(current.col);
 
 		internal static Range SwitchRange => range == Range.Row ? Range.Column : Range.Row;
 
@@ -71,7 +72,7 @@ namespace Assets.Script.Cells
 					{
 						for (int i = index; i < index + elementCount; i++)
 						{
-							cell.GetFromCross(line, destroy, i, ref score);
+							cell.GetFromCross(destroy, line[i], ref score);
 							range = crossRange;
 						}
 
@@ -89,25 +90,22 @@ namespace Assets.Script.Cells
 		}
 		private static void GetFromCross
 		(
-			this IEnumerable<Cell> cell, 
-			IEnumerable<Cell> line, 
+			this IEnumerable<Cell> cell,
 			List<Cell> destroy, 
-			int _index, 
+			Cell currentCell, 
 			ref int score
 		)
 		{
-			var pos = range == Range.Column ? line.ElementAt(_index).col
-											: line.ElementAt(_index).row;
-			var crossLine = cell.GetLine(pos)
+			var crossLine = cell.GetLine(currentCell)
 								.Where(c => !destroy.Contains(c))
 								.ToList();
 
-			int index = crossLine.IndexOf(line.ElementAt(_index)); //Debug.Log($"index1: {_index}, index2: {index}");
+			int index = crossLine.IndexOf(currentCell); //Debug.Log($"index1: {_index}, index2: {index}");
 
 			range = SwitchRange;
 			int top = crossLine.ElementsInSequence(index, 1),
 				bottom = crossLine.ElementsInSequence(index, -1),
-				count = top + bottom; //Debug.Log($"top: {top}, bottom: {bottom}");
+				count = top + bottom; Debug.Log($"top: {top}, bottom: {bottom}");
 
 			if (count > 1)
 			{
@@ -123,12 +121,10 @@ namespace Assets.Script.Cells
 
 			List<Cell> destroy = new();
 
-			var query = cell.Get(currentCell.Child.Type);
-			var rowList = query.GetRow(currentCell.row);
-			var colList = query.GetColumn(currentCell.col);
+			var query = cell.Get(currentCell.Child.Type); Debug.Log(currentCell.row + "" + currentCell.col);
 
-			query.GetFromCross(rowList, destroy, currentCell.col, ref score);
-			query.GetFromCross(colList, destroy, currentCell.row, ref score);
+			query.GetFromCross(destroy, currentCell, ref score);
+			query.GetFromCross(destroy, currentCell, ref score);
 
 			return destroy.Distinct().ToList();
 		}

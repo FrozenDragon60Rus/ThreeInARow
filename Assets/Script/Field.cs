@@ -134,10 +134,7 @@ namespace Assets.Script
         private void RemoveElement(List<Cell> delete)
         {
             foreach (Cell cell in delete)
-            {
-                Destroy(cell.Child.gameObject);
-                cell.Child = null;
-            }
+                cell.RemoveChild();
         }
         private void RelocateElement()
         {

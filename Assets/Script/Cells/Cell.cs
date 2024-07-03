@@ -22,13 +22,16 @@ namespace Assets.Script.Cells
             set
             {
                 child = value;
-                if(value != null)
-                    child.Parent = this;
+                child.Parent = this;
             }
             get => child;
         }
-        public void RemoveChild() =>
+        public void RemoveChild()
+        {
+            child.Remove();
+            child.Parent = null;
             child = null;
+        }
 
         public Cell(int col, int row, CellStatus status)
         {

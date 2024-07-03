@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Assets.Script.Elements
@@ -32,5 +33,9 @@ namespace Assets.Script.Elements
 
         protected override void Reaction() =>
             StartCoroutine(Move());
-    }
+		public override void Remove()
+		{
+            Destroy(gameObject);
+		}
+	}
 }

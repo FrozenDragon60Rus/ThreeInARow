@@ -28,15 +28,16 @@ namespace Tests
             cell.Generate();
             cell.GenerateElement();
 
-            var search = new ConsecutiveElements(10, 10, 0);
+			int score = 0;
             delete.AddRange(
-                search.FindFromStart(cell, new ElementType[] { ElementType.Red,
-                                                               ElementType.Green,
-                                                               ElementType.Blue,
-                                                               ElementType.Yellow
-                                                             }
-                                    )
-                           );
+                cell.FindConsecutiveFromStart(
+					new ElementType[] { 
+						ElementType.Red,
+                        ElementType.Green,
+                        ElementType.Blue,
+                        ElementType.Yellow
+                    },
+					ref score));
 
             Assert.NotZero(delete.Count);
             yield return null;
@@ -111,8 +112,6 @@ namespace Tests
 			var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
 			var getFromCross = type.GetMethod("GetFromCross", flag);
 			var query = cell.Get(cell[index].Child.Type);
-			var line = query.GetRow(cell[index].row).ToList();
-			var _index = line.IndexOf(cell[index]);
 
 			CellConsecutiveExtension.range = CellConsecutiveExtension.Range.Column;
 
@@ -120,9 +119,8 @@ namespace Tests
 			var parameters = new object[] 
 			{
 				query, 
-				line,
 				delete,
-				_index,
+				cell[index],
 				score
 			};
 
@@ -143,8 +141,6 @@ namespace Tests
 			var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
 			var getFromCross = type.GetMethod("GetFromCross", flag);
 			var query = cell.Get(cell[index].Child.Type);
-			var line = query.GetColumn(cell[index].col).ToList();
-			var _index = line.IndexOf(cell[index]);
 
 			CellConsecutiveExtension.range = CellConsecutiveExtension.Range.Row;
 
@@ -152,9 +148,8 @@ namespace Tests
 			var parameters = new object[]
 			{
 				query,
-				line,
 				delete,
-				_index,
+				cell[index],
 				score
 			};
 
