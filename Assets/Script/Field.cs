@@ -94,6 +94,7 @@ namespace Assets.Script
 
             if (!FindMatchesFromElement(new List<Cell> { currentCell, neighbor }))
                 SwapElements(currentCell, neighbor, true);
+
             yield return true;
         }
 

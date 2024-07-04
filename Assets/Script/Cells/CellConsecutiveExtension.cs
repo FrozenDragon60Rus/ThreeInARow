@@ -29,8 +29,8 @@ namespace Assets.Script.Cells
 		{
 			range = Range.Empty;
 			List<Cell> destroy = new();
-			int RowCount = cell.Select(c => c.row).Max(),
-				ColCount = cell.Select(c => c.col).Max();
+			int RowCount = cell.Select(c => c.row).Max() + 1,
+				ColCount = cell.Select(c => c.col).Max() + 1;
 
 			foreach (var type in types)
 			{
@@ -98,7 +98,7 @@ namespace Assets.Script.Cells
 		{
 			var crossLine = cell.GetLine(currentCell)
 								.Where(c => !destroy.Contains(c))
-								.ToList();
+								.ToList(); foreach (var line in crossLine) Debug.Log(currentCell.row + "" + currentCell.col + " - " + line.row + "" + line.col);
 
 			int index = crossLine.IndexOf(currentCell); //Debug.Log($"index1: {_index}, index2: {index}");
 
@@ -110,7 +110,9 @@ namespace Assets.Script.Cells
 			if (count > 1)
 			{
 				destroy.AddRange(
-					crossLine.GetRange(index - bottom, count + 1));
+					crossLine.GetRange(index - bottom, bottom));
+				destroy.AddRange(
+					crossLine.GetRange(index + 1, top));
 				score += count;
 			}
 		}
@@ -122,7 +124,6 @@ namespace Assets.Script.Cells
 			List<Cell> destroy = new();
 
 			var query = cell.Get(currentCell.Child.Type); Debug.Log(currentCell.row + "" + currentCell.col);
-
 			query.GetFromCross(destroy, currentCell, ref score);
 			query.GetFromCross(destroy, currentCell, ref score);
 
